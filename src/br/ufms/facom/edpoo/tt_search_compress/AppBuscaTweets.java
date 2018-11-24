@@ -5,7 +5,9 @@ import java.io.File;
 import java.util.List;
 
 import edu.princeton.cs.algs4.BinaryIn;
-import edu.princeton.cs.algs4.BinaryOut;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -28,210 +30,218 @@ import twitter4j.TwitterFactory;
 /**
  * Aplicação que busca tweets e salva em um arquivo compactado usando o
  * algoritmo de Huffman.
- * 
+ *
  * @author Eraldo R. Fernandes (eraldo@facom.ufms.br)
  *
  */
 public class AppBuscaTweets extends Application {
-	/**
-	 * Lista de tweets retornados pela busca.
-	 */
-	private List<String> tweets;
 
-	/**
-	 * TextField com os termos de busca.
-	 */
-	private TextField tfTermosBusca;
+    /**
+     * Lista de tweets retornados pela busca.
+     */
+    private List<String> tweets;
 
-	/**
-	 * API do Twitter.
-	 */
-	private Twitter apiTwitter;
+    /**
+     * TextField com os termos de busca.
+     */
+    private TextField tfTermosBusca;
 
-	/**
-	 * Janela principal da aplicação.
-	 */
-	private Stage janelaPrincipal;
+    /**
+     * API do Twitter.
+     */
+    private Twitter apiTwitter;
 
-	@Override
-	public void start(Stage primaryStage) {
-		// Referência para a janela principal.
-		janelaPrincipal = primaryStage;
+    /**
+     * Janela principal da aplicação.
+     */
+    private Stage janelaPrincipal;
 
-		// Título da janela.
-		janelaPrincipal.setTitle("Busca Tweets");
+    @Override
+    public void start(Stage primaryStage) {
+        // Referência para a janela principal.
+        janelaPrincipal = primaryStage;
 
-		// Twitter API.
-		apiTwitter = TwitterFactory.getSingleton();
+        // Título da janela.
+        janelaPrincipal.setTitle("Busca Tweets");
 
-		// Cria TextField para usuário digitar os termos de busca.
-		tfTermosBusca = new TextField("termos de busca");
+        // Twitter API.
+        apiTwitter = TwitterFactory.getSingleton();
 
-		// Botão de busca. Configura método 'buscar()' para tratar clique.
-		Button btnBuscar = new Button("Busca");
-		btnBuscar.setOnMouseClicked(e -> buscar());
+        // Cria TextField para usuário digitar os termos de busca.
+        tfTermosBusca = new TextField("termos de busca");
 
-		// Controle que exibe lista de tweets retornados pela busca.
-		ListView<String> lstTweets = new ListView<>();
+        // Botão de busca. Configura método 'buscar()' para tratar clique.
+        Button btnBuscar = new Button("Busca");
+        btnBuscar.setOnMouseClicked(e -> buscar());
 
-		// Lista de tweets para ser manipulada (inserção e remoção).
-		tweets = lstTweets.getItems();
+        // Controle que exibe lista de tweets retornados pela busca.
+        ListView<String> lstTweets = new ListView<>();
 
-		// Configura lista de resultados para ajustar largura de acordo com a janela.
-		lstTweets.setCellFactory(param -> new ListCell<String>() {
-			{
-				prefWidthProperty().bind(lstTweets.widthProperty().subtract(2));
-				setMaxWidth(Control.USE_PREF_SIZE);
-				setWrapText(true);
-			}
+        // Lista de tweets para ser manipulada (inserção e remoção).
+        tweets = lstTweets.getItems();
 
-			@Override
-			protected void updateItem(String item, boolean empty) {
-				super.updateItem(item, empty);
+        // Configura lista de resultados para ajustar largura de acordo com a janela.
+        lstTweets.setCellFactory(param -> new ListCell<String>() {
+            {
+                prefWidthProperty().bind(lstTweets.widthProperty().subtract(2));
+                setMaxWidth(Control.USE_PREF_SIZE);
+                setWrapText(true);
+            }
 
-				if (item != null && !empty) {
-					setText(item);
-				} else {
-					setText(null);
-				}
-			}
-		});
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
 
-		// Botação para salvar tweets. Configura método 'salvar()' para tratar clique.
-		Button btnSalvar = new Button("Salvar...");
-		btnSalvar.setOnMouseClicked(e -> salvar());
+                if (item != null && !empty) {
+                    setText(item);
+                } else {
+                    setText(null);
+                }
+            }
+        });
 
-		// Cria container e insere os controles.
-		VBox container = new VBox(tfTermosBusca, btnBuscar, lstTweets, btnSalvar);
+        // Botação para salvar tweets. Configura método 'salvar()' para tratar clique.
+        Button btnSalvar = new Button("Salvar...");
+        btnSalvar.setOnMouseClicked(e -> {
+            try {
+                salvar();
+            } catch (IOException ex) {
+                Logger.getLogger(AppBuscaTweets.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
 
-		// Incluir container na janela principal.
-		janelaPrincipal.setScene(new Scene(container));
+        // Cria container e insere os controles.
+        VBox container = new VBox(tfTermosBusca, btnBuscar, lstTweets, btnSalvar);
 
-		// Exibe janela principal.
-		janelaPrincipal.show();
-	}
+        // Incluir container na janela principal.
+        janelaPrincipal.setScene(new Scene(container));
 
-	/**
-	 * Busca tweets usando os termos fornecidos pelo usuário.
-	 */
-	private void buscar() {
-		try {
-			// Limpa lista de tweets anteriores.
-			tweets.clear();
+        // Exibe janela principal.
+        janelaPrincipal.show();
+    }
 
-			// Cria nova busca e configura língua para português.
-			Query query = new Query(tfTermosBusca.getText());
-			query.lang("pt");
+    /**
+     * Busca tweets usando os termos fornecidos pelo usuário.
+     */
+    private void buscar() {
+        try {
+            // Limpa lista de tweets anteriores.
+            tweets.clear();
 
-			// Executa busca.
-			QueryResult result = apiTwitter.search(query);
+            // Cria nova busca e configura língua para português.
+            Query query = new Query(tfTermosBusca.getText());
+            query.lang("pt");
+            query.setCount(1000);
+//            query.setMaxId(1000);
 
-			// Percorre todos os tweets retornados.
-			int numTweets = 0;
-			for (Status status : result.getTweets()) {
-				/*
+            // Executa busca.
+            QueryResult result = apiTwitter.search(query);
+
+            // Percorre todos os tweets retornados.
+            int numTweets = 0;
+            for (Status status : result.getTweets()) {
+                /*
 				 * Substitui sequências de espaços por um único espaço, incluindo quebras de
 				 * linha e tabulações.
-				 */
-				String tweetLimpo = status.getText().replaceAll("[\\t\\n\\r]+", " ");
+                 */
+                String tweetLimpo = status.getText().replaceAll("[\\t\\n\\r]+", " ");
 
-				// Cria uma string com o nome do usuário e o texto do seu tweet.
-				String tweet = String.format("@%s: %s", status.getUser().getScreenName(), tweetLimpo);
+                // Cria uma string com o nome do usuário e o texto do seu tweet.
+                String tweet = String.format("@%s: %s", status.getUser().getScreenName(), tweetLimpo);
 
-				// Adiciona texto na lista de tweets.
-				tweets.add(tweet);
+                // Adiciona texto na lista de tweets.
+                tweets.add(tweet);
 
-				++numTweets;
-			}
+                ++numTweets;
+            }
 
-			// Se houver mais uma página de resultados, executa a nova busca.
-			if (result.hasNext()) {
-				// Obtém query para próxima página.
-				query = result.nextQuery();
+            // Se houver mais uma página de resultados, executa a nova busca.
+            if (result.hasNext()) {
+                // Obtém query para próxima página.
+                query = result.nextQuery();
 
-				// Executa busca.
-				result = apiTwitter.search(query);
+                // Executa busca.
+                result = apiTwitter.search(query);
 
-				// Obtém tweets da próxima página.
-				for (Status status : result.getTweets()) {
-					/*
+                // Obtém tweets da próxima página.
+                for (Status status : result.getTweets()) {
+                    /*
 					 * Substitui sequências de espaços por um único espaço, incluindo quebras de
 					 * linha e tabulações.
-					 */
-					String tweetLimpo = status.getText().replaceAll("[\\t\\n\\r]+", " ");
+                     */
+                    String tweetLimpo = status.getText().replaceAll("[\\t\\n\\r]+", " ");
 
-					// Cria uma string com o nome do usuário e o texto do seu tweet.
-					String tweet = String.format("@%s: %s", status.getUser().getScreenName(), tweetLimpo);
+                    // Cria uma string com o nome do usuário e o texto do seu tweet.
+                    String tweet = String.format("@%s: %s", status.getUser().getScreenName(), tweetLimpo);
 
-					// Adiciona texto na lista de tweets.
-					tweets.add(tweet);
+                    // Adiciona texto na lista de tweets.
+                    tweets.add(tweet);
 
-					++numTweets;
-				}
-			}
+                    ++numTweets;
+                }
 
-			// Exibe mensagem de quantos tweets foram recuperados.
-			Alert alert = new Alert(AlertType.INFORMATION);
-			alert.setTitle("Pesquisa Concluída");
-			alert.setHeaderText("Pesquisa Concluída");
-			alert.setContentText(String.format("Encontrados %d tweets", numTweets));
-			alert.showAndWait();
-		} catch (TwitterException e) {
-			// Erro ao acessar API do Twitter.
-			Alert alert = new Alert(AlertType.ERROR);
-			alert.setTitle("Erro");
-			alert.setHeaderText(e.getClass().toString());
-			alert.setContentText(e.getErrorMessage());
-			alert.showAndWait();
-		}
-	}
+            }
 
-	/**
-	 * Salva a lista de tweets em um arquivo selecionado pelo usuário.
-	 */
-	private void salvar() {
-		// Cria janela de seleção de arquivo a ser salvo.
-		FileChooser fc = new FileChooser();
-		fc.setTitle("Arquivo onde os tweets serão salvos");
+            // Exibe mensagem de quantos tweets foram recuperados.
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Pesquisa Concluída");
+            alert.setHeaderText("Pesquisa Concluída");
+            alert.setContentText(String.format("Encontrados %d tweets", numTweets));
+            alert.showAndWait();
+        } catch (TwitterException e) {
+            // Erro ao acessar API do Twitter.
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Erro");
+            alert.setHeaderText(e.getClass().toString());
+            alert.setContentText(e.getErrorMessage());
+            alert.showAndWait();
+        }
+    }
 
-		// Exibe janela e obtém arquivo selecionado.
-		File f = fc.showSaveDialog(janelaPrincipal);
+    /**
+     * Salva a lista de tweets em um arquivo selecionado pelo usuário.
+     */
+    private void salvar() throws IOException {
+        // Cria janela de seleção de arquivo a ser salvo.
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Arquivo onde os tweets serão salvos");
 
-		if (f != null) {
-			/*
+        // Exibe janela e obtém arquivo selecionado.
+        File f = fc.showSaveDialog(janelaPrincipal);
+
+        if (f != null) {
+            /*
 			 * Se algum arquivo foi selecionado, então concatena todos os tweets, separados
 			 * por quebra de linha.
-			 */
-			StringBuilder sb = new StringBuilder();
-			for (String t : tweets)
-				sb.append(t + "\n");
+             */
+            StringBuilder sb = new StringBuilder();
+            for (String t : tweets) {
+                sb.append(t + "\n");
+            }
 
-			// Cria stream de entrada a partir dos bytes da string criada acima.
-			BinaryIn in = new BinaryIn(new ByteArrayInputStream(sb.toString().getBytes()));
+            // Cria stream de entrada a partir dos bytes da string criada acima.
+            BinaryIn in = new BinaryIn(new ByteArrayInputStream(sb.toString().getBytes()));
 
-			// Abre arquivo de saída como um stream binário.
-			BinaryOut out = new BinaryOut(f.getAbsolutePath());
+            Huffman huf = new Huffman(f);
 
-			while (!in.isEmpty())
-				out.write(in.readBoolean());
+            huf.compressor(in);
 
-			out.close();
+            // Abre arquivo de saída como um stream binário.
+            // Exibe aviso de sucesso.
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Tweets salvos");
+            alert.setHeaderText("Pasta: " + f.getParentFile().getAbsolutePath());
+            alert.setContentText("Arquivo: " + f.getName());
+            alert.showAndWait();
+        }
+    }
 
-			// Exibe aviso de sucesso.
-			Alert alert = new Alert(AlertType.INFORMATION);
-			alert.setTitle("Tweets salvos");
-			alert.setHeaderText("Pasta: " + f.getParentFile().getAbsolutePath());
-			alert.setContentText("Arquivo: " + f.getName());
-			alert.showAndWait();
-		}
-	}
-
-	/**
-	 * Lança aplicação.
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		launch(args);
-	}
+    /**
+     * Lança aplicação.
+     *
+     * @param args
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
 }
