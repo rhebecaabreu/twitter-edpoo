@@ -5,6 +5,8 @@ import java.io.File;
 import java.util.List;
 
 import edu.princeton.cs.algs4.BinaryIn;
+import edu.princeton.cs.algs4.StdOut;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -131,7 +133,7 @@ public class AppBuscaTweets extends Application {
             // Cria nova busca e configura língua para português.
             Query query = new Query(tfTermosBusca.getText());
             query.lang("pt");
-            query.setCount(1000);
+            query.count(100);
 //            query.setMaxId(1000);
 
             // Executa busca.
@@ -139,6 +141,8 @@ public class AppBuscaTweets extends Application {
 
             // Percorre todos os tweets retornados.
             int numTweets = 0;
+            while(result.hasNext() && numTweets<1000 ){
+                StdOut.println(result.getCount());
             for (Status status : result.getTweets()) {
                 /*
 				 * Substitui sequências de espaços por um único espaço, incluindo quebras de
@@ -156,7 +160,8 @@ public class AppBuscaTweets extends Application {
             }
 
             // Se houver mais uma página de resultados, executa a nova busca.
-            if (result.hasNext()) {
+            if(result.hasNext() ){
+                
                 // Obtém query para próxima página.
                 query = result.nextQuery();
 
@@ -180,7 +185,10 @@ public class AppBuscaTweets extends Application {
                     ++numTweets;
                 }
 
+            
             }
+            }
+            
 
             // Exibe mensagem de quantos tweets foram recuperados.
             Alert alert = new Alert(AlertType.INFORMATION);
@@ -215,9 +223,15 @@ public class AppBuscaTweets extends Application {
 			 * por quebra de linha.
              */
             StringBuilder sb = new StringBuilder();
+            File ff = new File("C:\\Users\\Gui\\Desktop\\teste.txt");
+            FileWriter fw = new FileWriter(f+"Puro.txt");
             for (String t : tweets) {
                 sb.append(t + "\n");
+                fw.write(t);
             }
+            fw.close();
+            
+            
 
             // Cria stream de entrada a partir dos bytes da string criada acima.
             BinaryIn in = new BinaryIn(new ByteArrayInputStream(sb.toString().getBytes()));
