@@ -13,6 +13,7 @@ Este trabalho contém dois programas
               
 		OBS:. A saída do ExpandTweets vai para um arquivo chamado expand.txt
 
+O programa utiliza base feita pelo professor da disciplina Eraldo Luís Rezende Fernandes e a biblioteca algs4.jar do livro Algorithms 4th Edition por Robert Sedgewick. 
 
 Alunos: Guilherme Campos, Rhebeca Abreu e Tiago Fugishima
 
