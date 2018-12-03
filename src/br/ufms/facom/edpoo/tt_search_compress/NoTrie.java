@@ -30,6 +30,13 @@ public class NoTrie implements Comparable<NoTrie> {
         this.esq = esq;
         this.dir = dir;
     }
+    
+    NoTrie(char simbolo, int frequencia, NoTrie esq, NoTrie dir){
+        this.simbolo = simbolo;
+        this.frequencia = frequencia;
+        this.esq = esq;
+        this.dir = dir;
+    }
 
     NoTrie(NoTrie esq, NoTrie dir) {
         this.esq = esq;

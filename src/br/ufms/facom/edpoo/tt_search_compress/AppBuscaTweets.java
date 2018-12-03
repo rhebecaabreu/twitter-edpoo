@@ -5,9 +5,15 @@ import java.io.File;
 import java.util.List;
 
 import edu.princeton.cs.algs4.BinaryIn;
+import edu.princeton.cs.algs4.BinaryStdOut;
 import edu.princeton.cs.algs4.StdOut;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -134,45 +140,18 @@ public class AppBuscaTweets extends Application {
             Query query = new Query(tfTermosBusca.getText());
             query.lang("pt");
             query.count(100);
-//            query.setMaxId(1000);
 
             // Executa busca.
             QueryResult result = apiTwitter.search(query);
 
             // Percorre todos os tweets retornados.
             int numTweets = 0;
-            while(result.hasNext() && numTweets<1000 ){
+            while (result.hasNext() && numTweets < 1000) {
                 StdOut.println(result.getCount());
-            for (Status status : result.getTweets()) {
-                /*
-				 * Substitui sequências de espaços por um único espaço, incluindo quebras de
-				 * linha e tabulações.
-                 */
-                String tweetLimpo = status.getText().replaceAll("[\\t\\n\\r]+", " ");
-
-                // Cria uma string com o nome do usuário e o texto do seu tweet.
-                String tweet = String.format("@%s: %s", status.getUser().getScreenName(), tweetLimpo);
-
-                // Adiciona texto na lista de tweets.
-                tweets.add(tweet);
-
-                ++numTweets;
-            }
-
-            // Se houver mais uma página de resultados, executa a nova busca.
-            if(result.hasNext() ){
-                
-                // Obtém query para próxima página.
-                query = result.nextQuery();
-
-                // Executa busca.
-                result = apiTwitter.search(query);
-
-                // Obtém tweets da próxima página.
                 for (Status status : result.getTweets()) {
                     /*
-					 * Substitui sequências de espaços por um único espaço, incluindo quebras de
-					 * linha e tabulações.
+				 * Substitui sequências de espaços por um único espaço, incluindo quebras de
+				 * linha e tabulações.
                      */
                     String tweetLimpo = status.getText().replaceAll("[\\t\\n\\r]+", " ");
 
@@ -185,10 +164,34 @@ public class AppBuscaTweets extends Application {
                     ++numTweets;
                 }
 
-            
+                // Se houver mais uma página de resultados, executa a nova busca.
+                if (result.hasNext()) {
+
+                    // Obtém query para próxima página.
+                    query = result.nextQuery();
+
+                    // Executa busca.
+                    result = apiTwitter.search(query);
+
+                    // Obtém tweets da próxima página.
+                    for (Status status : result.getTweets()) {
+                        /*
+					 * Substitui sequências de espaços por um único espaço, incluindo quebras de
+					 * linha e tabulações.
+                         */
+                        String tweetLimpo = status.getText().replaceAll("[\\t\\n\\r]+", " ");
+
+                        // Cria uma string com o nome do usuário e o texto do seu tweet.
+                        String tweet = String.format("@%s: %s", status.getUser().getScreenName(), tweetLimpo);
+
+                        // Adiciona texto na lista de tweets.
+                        tweets.add(tweet);
+
+                        ++numTweets;
+                    }
+
+                }
             }
-            }
-            
 
             // Exibe mensagem de quantos tweets foram recuperados.
             Alert alert = new Alert(AlertType.INFORMATION);
@@ -217,28 +220,28 @@ public class AppBuscaTweets extends Application {
         // Exibe janela e obtém arquivo selecionado.
         File f = fc.showSaveDialog(janelaPrincipal);
 
+        Huffman huf = new Huffman();
+
         if (f != null) {
             /*
 			 * Se algum arquivo foi selecionado, então concatena todos os tweets, separados
 			 * por quebra de linha.
              */
             StringBuilder sb = new StringBuilder();
-            File ff = new File("C:\\Users\\Gui\\Desktop\\teste.txt");
-            FileWriter fw = new FileWriter(f+"Puro.txt");
+            FileWriter fw = new FileWriter(f);
             for (String t : tweets) {
                 sb.append(t + "\n");
-                fw.write(t);
+                fw.write(t+"<>");
             }
+            fw.flush();
             fw.close();
-            
-            
 
+            //
             // Cria stream de entrada a partir dos bytes da string criada acima.
-            BinaryIn in = new BinaryIn(new ByteArrayInputStream(sb.toString().getBytes()));
+            InputStream fin1 = new FileInputStream(f);
+            BinaryIn in = new BinaryIn(fin1);
 
-            Huffman huf = new Huffman(f);
-
-            huf.compressor(in);
+            huf.compressor(in, f);
 
             // Abre arquivo de saída como um stream binário.
             // Exibe aviso de sucesso.
@@ -247,7 +250,9 @@ public class AppBuscaTweets extends Application {
             alert.setHeaderText("Pasta: " + f.getParentFile().getAbsolutePath());
             alert.setContentText("Arquivo: " + f.getName());
             alert.showAndWait();
+
         }
+
     }
 
     /**
